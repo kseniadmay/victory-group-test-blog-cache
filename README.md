@@ -12,7 +12,7 @@ http://localhost:8000/docs
 - SQLAlchemy 2.0
 - PostgreSQL 16
 - Redis 7.4
-- Docker Compose
+- Docker Compose 5.1
 - pytest + TestClient
 
 ## Возможности
@@ -59,22 +59,19 @@ API будет доступно по адресу: http://localhost:8000/docs
 ## Тестирование
 
 ```bash
-# Запуск интеграционного теста
-docker-compose exec app pytest -v app/tests/test_integration.py
-
-# Или внутри контейнера
+# Запуск теста внутри контейнера
 docker-compose exec app pytest -v
 ```
 
 ## Ключевые решения
 
-- Кэширование — Cache-Aside паттерн (Redis → miss → PostgreSQL → cache)
-- Инвалидация кэша — мгновенная при PUT/DELETE
-- TTL 5 минут — дополнительная страховка от устаревших данных
-- Raw SQL — используется в методе get_post
-- Redis — синхронный клиент — обеспечивает стабильную работу тестов и простоту запуска
-- FastAPI — async-эндпоинты там, где это уместно
-- Docker Compose — все сервисы (app + PostgreSQL + Redis) запускаются одной командой
+- Кэширование – Cache-Aside паттерн (Redis → miss → PostgreSQL → cache)
+- Инвалидация кэша – мгновенная при PUT/DELETE
+- TTL 5 минут – дополнительная страховка от устаревших данных
+- Raw SQL – используется в методе get_post
+- Redis – синхронный клиент – обеспечивает стабильную работу тестов и простоту запуска
+- FastAPI – async-эндпоинты там, где это уместно
+- Docker Compose – все сервисы (app + PostgreSQL + Redis) запускаются одной командой
 
 ## Архитектура кэширования
 

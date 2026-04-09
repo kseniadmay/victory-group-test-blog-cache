@@ -1,40 +1,58 @@
+# Docker Compose конфигурация для Blog Cache API.
+# Определяет три сервиса: приложение (FastAPI), база данных PostgreSQL и Redis для кэширования.
+# Volume для PostgreSQL обеспечивает сохранение данных вне контейнера
+
 services:
   app:
+    # Сборка Docker образа из текущей директории
     build: .
+    # Проброс портов: локальный 8000 -> контейнер 8000
     ports:
       - "8000:8000"
+    # Подключение переменных окружения из файла .env
     env_file:
       - .env
+    # Дополнительная переменная окружения для Python
     environment:
       - PYTHONPATH=/container
+    # Зависимости от сервисов db и redis
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy  # запуск app только после готовности БД
       redis:
-        condition: service_started
+        condition: service_started  # запуск app после старта Redis
 
   db:
+    # Используется официальный образ PostgreSQL версии 16
     image: postgres:16
+    # Настройка базы данных через переменные окружения
     environment:
-      POSTGRES_DB: blogdb
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: blogdb         # имя базы данных для приложения
+      POSTGRES_USER: user         # пользователь БД
+      POSTGRES_PASSWORD: password # пароль пользователя
+    # Проброс порта для локального доступа к базе
     ports:
       - "5432:5432"
+    # Volume для персистентного хранения данных БД
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Healthcheck проверяет доступность базы
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d blogdb" ]
-      interval: 3s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
+      test: [ "CMD-SHELL", "pg_isready -U user -d blogdb" ]  # проверка готовности DB
+      interval: 3s       # интервал между проверками
+      timeout: 5s        # таймаут на одну проверку
+      retries: 5         # количество попыток перед отметкой не здоров
+      start_period: 5s   # время ожидания после старта контейнера перед первой проверкой
 
   redis:
+    # Используется лёгкий Alpine-образ Redis 7
     image: redis:7-alpine
+    # Проброс порта для локального доступа к Redis
     ports:
       - "6379:6379"
+    # Запуск Redis с включённым append-only режимом (обеспечивает сохранение данных на диск и устойчивость к перезапуску)
     command: redis-server --appendonly yes
 
+# Определение volume для хранения данных PostgreSQL вне контейнера
 volumes:
   postgres_data:
